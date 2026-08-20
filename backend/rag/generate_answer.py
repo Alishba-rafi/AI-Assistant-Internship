@@ -1,7 +1,13 @@
-import ollama
+import os
+from google import genai
+from google.genai import types
 
 
-MODEL = "qwen2.5:7b"
+MODEL = "gemini-3.6-flash"
+
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
 
 
 SYSTEM_PROMPT = """
@@ -43,18 +49,12 @@ KNOWLEDGE BASE CONTEXT:
 Use the above context to answer the user's CodeMate website question.
 """
 
-    response = ollama.chat(
+    response = client.models.generate_content(
         model=MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": prompt
-            },
-            {
-                "role": "user",
-                "content": question
-            }
-        ]
+        contents=question,
+        config=types.GenerateContentConfig(
+            system_instruction=prompt
+        )
     )
 
-    return response["message"]["content"]
+    return response.text

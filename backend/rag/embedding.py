@@ -1,8 +1,23 @@
-import ollama
+import os
+from google import genai
+
 from rag.chunker import chunking
 
 
-EMBEDDING_MODEL = "nomic-embed-text"
+EMBEDDING_MODEL = "gemini-embedding-2"
+
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
+
+
+def get_embedding(text):
+    response = client.models.embed_content(
+        model=EMBEDDING_MODEL,
+        contents=text
+    )
+
+    return response.embeddings[0].values
 
 
 def embedding_chunks(document_path):
@@ -10,20 +25,7 @@ def embedding_chunks(document_path):
     embeddings = []
 
     for chunk in chunks:
-        response = ollama.embed(
-            model=EMBEDDING_MODEL,
-            input=chunk.page_content
-        )
-
-        embeddings.append(response["embeddings"][0])
+        embedding = get_embedding(chunk.page_content)
+        embeddings.append(embedding)
 
     return chunks, embeddings
-
-
-def get_embedding(text):
-    response = ollama.embed(
-        model=EMBEDDING_MODEL,
-        input=text
-    )
-
-    return response["embeddings"][0]
